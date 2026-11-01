@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173b36">
+<title>Mein Energie-Cockpit</title>
+<style>
+:root{--bg:#f3f6f3;--card:#fff;--ink:#18332e;--muted:#687873;--line:#dce5df;--accent:#1e6658;--soft:#e8f1ec;--gold:#d89b32}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 14px calc(24px + env(safe-area-inset-bottom))}
+main{max-width:680px;margin:auto}.top{padding:22px 4px 14px;display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:25px}.top h1{font-size:22px;margin:0}.top p{margin:3px 0 0;color:var(--muted);font-size:13px}
+nav{display:flex;gap:7px;overflow:auto;padding:4px 0 14px}.tab{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:22px;padding:10px 15px;white-space:nowrap;font-weight:600}.tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;margin:0 0 13px;box-shadow:0 2px 10px #173b3608}.card h2{font-size:17px;margin:0 0 13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{margin:0 0 12px}.field label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}.field input,.field select{width:100%;border:1px solid #cbd8d1;border-radius:11px;padding:13px 12px;font:inherit;color:var(--ink);background:#fff;min-width:0}.hint{font-size:12px;color:var(--muted);line-height:1.45;margin:8px 0 0}
+button.primary,button.secondary,button.danger{border:0;border-radius:12px;padding:13px 16px;font:600 15px inherit;width:100%;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:var(--soft);color:var(--ink)}.danger{background:#fff0ed;color:#9c3425}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:var(--soft);border-radius:14px;padding:13px}.metric small{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:23px;margin-top:4px}.metric.wide{grid-column:1/-1}.muted{color:var(--muted)}.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 5px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}td:last-child,th:last-child{text-align:right}
+.entry{padding:12px 0;border-bottom:1px solid var(--line)}.entry:last-child{border:0}.entrytop{display:flex;justify-content:space-between;gap:8px;font-weight:600}.entry small{display:block;color:var(--muted);margin-top:4px}.entry button{width:auto;padding:6px 9px;margin-left:5px;font-size:12px}
+.barrow{display:grid;grid-template-columns:42px 1fr 70px;gap:8px;align-items:center;margin:10px 0;font-size:12px}.barbg{height:11px;border-radius:9px;background:#edf1ee;overflow:hidden}.barfill{height:100%;background:var(--accent);border-radius:9px}
+.notice{padding:12px;background:#fff8e9;border:1px solid #f0dfb7;border-radius:12px;color:#6b5220;font-size:13px;line-height:1.45}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}
+@media(max-width:390px){.grid{grid-template-columns:1fr}.metric strong{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><div class="logo">ϟ</div><div><h1>Mein Energie-Cockpit</h1><p>Verbrauch und Kosten im Blick</p></div></header>
+<nav>
+<button class="tab active" data-tab="home">Übersicht</button>
+<button class="tab" data-tab="add">Ablesung</button>
+<button class="tab" data-tab="contract">Vertrag</button>
+<button class="tab" data-tab="stats">Statistik</button>
+<button class="tab" data-tab="backup">Sicherung</button>
+</nav>
+<section id="home">
+<div class="card"><h2>Aktueller Überblick</h2><div class="metrics">
+<div class="metric"><small>Letzter Zählerstand</small><strong id="lastMeter">–</strong><small id="lastDate">Noch keine Ablesung</small></div>
+<div class="metric"><small>Letzter erfasster Verbrauch</small><strong id="lastUsage">–</strong><small>kWh seit vorheriger Ablesung</small></div>
+<div class="metric"><small>Verbrauchskosten letzter Zeitraum</small><strong id="lastEnergyCost">–</strong><small>Arbeitspreis × Verbrauch</small></div>
+<div class="metric"><small>Grundpreis letzter Zeitraum</small><strong id="lastBaseCost">–</strong><small>zeitanteilig berechnet</small></div>
+<div class="metric wide"><small>Gesamtkosten letzter Ablesezeitraum</small><strong id="lastTotal">–</strong><small id="lastPeriod">Wird nach zwei Ablesungen angezeigt</small></div>
+</div></div>
+<div class="card"><h2>Letzte Ablesungen</h2><div id="recent" class="muted">Noch keine Daten vorhanden. Trage deine erste Ablesung ein.</div></div>
+<div class="notice">Tipp: Trage den Zählerstand regelmäßig ein. Ab der zweiten Ablesung berechnet die App automatisch den Verbrauch zwischen beiden Daten.</div>
+</section>
+<section id="add" class="hidden">
+<div class="card"><h2>Neue Zählerablesung</h2>
+<div class="field"><label for="readDate">Ablesedatum</label><input id="readDate" type="date"></div>
+<div class="field"><label for="meter">Zählerstand (kWh)</label><input id="meter" type="number" min="0" step="0.01" placeholder="z. B. 12543,7"></div>
+<button class="primary" id="saveReading">Ablesung speichern</button>
+<p class="hint">Bitte immer den gesamten Zählerstand eintragen – nicht nur den Verbrauch seit der letzten Ablesung. Die erste Ablesung dient als Ausgangswert und erzeugt noch keine Verbrauchskosten.</p>
+</div>
+<div class="card"><h2>Gespeicherte Ablesungen</h2><div id="allReadings" class="muted">Noch keine Ablesungen.</div></div>
+</section>
+<section id="contract" class="hidden">
+<div class="card"><h2>Deine Vertragsdaten</h2>
+<div class="field"><label for="workPrice">Arbeitspreis (Cent pro kWh)</label><input id="workPrice" type="number" min="0" step="0.001" placeholder="z. B. 32,5"></div>
+<div class="field"><label for="basePrice">Grundpreis (Euro)</label><input id="basePrice" type="number" min="0" step="0.01" placeholder="z. B. 14,90"></div>
+<div class="field"><label for="basePeriod">Grundpreis gilt pro</label><select id="basePeriod"><option value="month">Monat</option><option value="year">Jahr</option></select></div>
+<button class="primary" id="saveContract">Vertragsdaten speichern</button>
+<p class="hint">Der Grundpreis wird für jeden Ablesezeitraum nach der tatsächlichen Anzahl der Tage anteilig berechnet. Bei einem Jahresgrundpreis verwendet die App 365,25 Tage pro Jahr.</p>
+</div>
+<div class="notice">Wenn dein Anbieter den Arbeitspreis oder Grundpreis ändert, kannst du die Vertragswerte hier anpassen. Für eine genaue historische Kostenübersicht sollten Preisänderungen mit ihrem jeweiligen Gültigkeitsdatum separat erfasst werden; diese erste Version verwendet den aktuell gespeicherten Tarif auch für frühere Zeiträume.</div>
+</section>
+<section id="stats" class="hidden">
+<div class="card"><h2>Verbrauch und Kosten nach Monat</h2><div id="monthly" class="muted">Für die Statistik werden mindestens zwei Ablesungen benötigt.</div></div>
+<div class="card"><h2>Jahresübersicht</h2><div id="yearly" class="muted">Noch keine Daten.</div></div>
+</section>
+<section id="backup" class="hidden">
+<div class="card"><h2>Daten sichern und übertragen</h2><p class="hint">Exportiere regelmäßig eine Sicherung deiner Vertragsdaten und Ablesungen. Die Datei kannst du in der Dateien-App ablegen.</p>
+<div class="actions"><button class="primary" id="exportData">Sicherung exportieren</button><button class="secondary" id="exportCsv">CSV exportieren</button></div>
+<div class="field" style="margin-top:16px"><label for="importFile">Vorhandene Sicherung wiederherstellen (JSON)</label><input id="importFile" type="file" accept=".json,application/json"></div>
+<button class="secondary" id="importData">Sicherung einspielen</button>
+<p class="hint">Beim Wiederherstellen werden die aktuell in dieser App gespeicherten Daten ersetzt.</p>
+</div>
+<div class="card"><h2>Alle Daten löschen</h2><button class="danger" id="clearData">Alle Vertrags- und Ablesedaten löschen</button></div>
+</section>
+<footer>Deine Einträge bleiben lokal in diesem Browser auf diesem iPhone gespeichert.</footer>
+</main>
+<script>
+const KEY='energieCockpit_v1';
+let state=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{contract:{workPrice:'',basePrice:'',basePeriod:'month'},readings:[]}}catch(e){return {contract:{workPrice:'',basePrice:'',basePeriod:'month'},readings:[]}}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function euro(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(v)}
+function num(v){return Number(v)||0}
+function dateFmt(s){return new Date(s+'T12:00:00').toLocaleDateString('de-DE')}
+function daysBetween(a,b){return Math.max(0,(new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)}
+function sorted(){return [...state.readings].sort((a,b)=>a.date.localeCompare(b.date))}
+function intervals(){
+ const r=sorted(), c=state.contract, dailyBase=c.basePeriod==='year'?num(c.basePrice)/365.25:num(c.basePrice)*12/365.25;
+ let out=[];
+ for(let i=1;i<r.length;i++){
+  let days=daysBetween(r[i-1].date,r[i].date), usage=r[i].meter-r[i-1].meter;
+  if(days<=0||usage<0)continue;
+  let energy=usage*num(c.workPrice)/100, base=days*dailyBase;
+  out.push({start:r[i-1].date,end:r[i].date,days,usage,energy,base,total:energy+base});
+ }
+ return out;
+}
+function distributeMonthly(){
+ let map={};
+ for(const x of intervals()){
+  const start=new Date(x.start+'T12:00:00'), end=new Date(x.end+'T12:00:00');
+  for(let d=new Date(start);d<end;d.setDate(d.getDate()+1)){
+   let key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+   if(!map[key])map[key]={usage:0,energy:0,base:0,total:0};
+   map[key].usage+=x.usage/x.days;map[key].energy+=x.energy/x.days;map[key].base+=x.base/x.days;map[key].total+=x.total/x.days;
+  }
+ }
+ return map;
+}
+function render(){
+ const r=sorted(), ints=intervals(), last=r[r.length-1], prev=r[r.length-2], x=ints[ints.length-1];
+ document.getElementById('lastMeter').textContent=last?num(last.meter).toLocaleString('de-DE')+' kWh':'–';
+ document.getElementById('lastDate').textContent=last?'Stand vom '+dateFmt(last.date):'Noch keine Ablesung';
+ document.getElementById('lastUsage').textContent=x?x.usage.toLocaleString('de-DE',{maximumFractionDigits:2})+' kWh':'–';
+ document.getElementById('lastEnergyCost').textContent=x?euro(x.energy):'–';
+ document.getElementById('lastBaseCost').textContent=x?euro(x.base):'–';
+ document.getElementById('lastTotal').textContent=x?euro(x.total):'–';
+ document.getElementById('lastPeriod').textContent=x?dateFmt(x.start)+' bis '+dateFmt(x.end)+' · '+x.days+' Tage':'Wird nach zwei Ablesungen angezeigt';
+ document.getElementById('recent').innerHTML=r.length? r.slice(-4).reverse().map(v=>`<div class="entry"><div class="entrytop"><span>${dateFmt(v.date)}</span><span>${num(v.meter).toLocaleString('de-DE')} kWh</span></div></div>`).join(''):'Noch keine Daten vorhanden.';
+ document.getElementById('allReadings').innerHTML=r.length?r.slice().reverse().map(v=>`<div class="entry"><div class="entrytop"><span>${dateFmt(v.date)}</span><span>${num(v.meter).toLocaleString('de-DE')} kWh</span></div><small><button class="secondary" onclick="editReading('${v.id}')">Bearbeiten</button><button class="danger" onclick="deleteReading('${v.id}')">Löschen</button></small></div>`).join(''):'Noch keine Ablesungen.';
+ const m=distributeMonthly(), keys=Object.keys(m).sort();
+ if(keys.length){
+  const recent=keys.slice(-12), max=Math.max(...recent.map(k=>m[k].usage),1);
+  document.getElementById('monthly').innerHTML=recent.map(k=>`<div class="barrow"><span>${k.slice(5,7)}/${k.slice(0,4)}</span><div class="barbg"><div class="barfill" style="width:${m[k].usage/max*100}%"></div></div><span style="text-align:right">${m[k].usage.toFixed(1).replace('.',',')} kWh</span></div><div style="font-size:12px;color:#687873;text-align:right;margin-top:-5px;margin-bottom:8px">Kosten: ${euro(m[k].total)} (davon Grundpreis ${euro(m[k].base)})</div>`).join('');
+ }else document.getElementById('monthly').textContent='Für die Statistik werden mindestens zwei Ablesungen benötigt.';
+ let years={};for(const k of keys){let y=k.slice(0,4);if(!years[y])years[y]={usage:0,total:0,base:0};years[y].usage+=m[k].usage;years[y].total+=m[k].total;years[y].base+=m[k].base}
+ document.getElementById('yearly').innerHTML=Object.keys(years).sort().reverse().map(y=>`<div class="entry"><div class="entrytop"><span>${y}</span><span>${euro(years[y].total)}</span></div><small>${years[y].usage.toFixed(1).replace('.',',')} kWh · Verbrauchskosten ${euro(years[y].total-years[y].base)} · Grundpreis ${euro(years[y].base)}</small></div>`).join('')||'Noch keine Daten.';
+ document.getElementById('workPrice').value=state.contract.workPrice;
+ document.getElementById('basePrice').value=state.contract.basePrice;
+ document.getElementById('basePeriod').value=state.contract.basePeriod||'month';
+}
+function showTab(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id))}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+document.getElementById('readDate').value=new Date().toISOString().slice(0,10);
+document.getElementById('saveReading').onclick=()=>{
+ const date=document.getElementById('readDate').value,meter=num(document.getElementById('meter').value);
+ if(!date||document.getElementById('meter').value===''||meter<0){alert('Bitte Datum und einen gültigen Zählerstand eingeben.');return}
+ if(state.readings.some(x=>x.date===date)){alert('Für dieses Datum gibt es bereits eine Ablesung. Bitte bearbeite den vorhandenen Eintrag.');return}
+ state.readings.push({id:String(Date.now()),date,meter});document.getElementById('meter').value='';persist();showTab('home');
+};
+document.getElementById('saveContract').onclick=()=>{
+ const w=document.getElementById('workPrice').value,b=document.getElementById('basePrice').value;
+ if(w===''||b===''||num(w)<0||num(b)<0){alert('Bitte Arbeitspreis und Grundpreis gültig eintragen.');return}
+ state.contract={workPrice:w,basePrice:b,basePeriod:document.getElementById('basePeriod').value};persist();alert('Vertragsdaten gespeichert.');
+};
+window.deleteReading=id=>{if(confirm('Diese Ablesung wirklich löschen?')){state.readings=state.readings.filter(x=>x.id!==id);persist()}};
+window.editReading=id=>{let r=state.readings.find(x=>x.id===id);if(!r)return;let d=prompt('Neues Datum (JJJJ-MM-TT):',r.date);if(d===null)return;let v=prompt('Neuer Zählerstand in kWh:',r.meter);if(v===null)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||v===''||num(v)<0){alert('Eingabe nicht gültig.');return}if(state.readings.some(x=>x.id!==id&&x.date===d)){alert('Für dieses Datum gibt es bereits eine Ablesung.');return}r.date=d;r.meter=num(v);persist()};
+function download(name,content,type){let a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+document.getElementById('exportData').onclick=()=>download('energie-cockpit-sicherung.json',JSON.stringify(state,null,2),'application/json');
+document.getElementById('exportCsv').onclick=()=>{let rows=[['Datum','Zählerstand_kWh','Verbrauch_seit_letzter_Ablesung_kWh','Verbrauchskosten_EUR','Grundpreisanteil_EUR','Gesamtkosten_EUR']];let r=sorted(),ints=intervals();r.forEach((v,i)=>{let x=ints[i-1];rows.push([v.date,v.meter,x?x.usage.toFixed(3):'',x?x.energy.toFixed(2):'',x?x.base.toFixed(2):'',x?x.total.toFixed(2):''])});download('energie-cockpit.csv','\ufeff'+rows.map(a=>a.join(';')).join('\n'),'text/csv;charset=utf-8')};
+document.getElementById('importData').onclick=()=>{let f=document.getElementById('importFile').files[0];if(!f){alert('Bitte zuerst eine JSON-Sicherungsdatei auswählen.');return}let rd=new FileReader();rd.onload=()=>{try{let d=JSON.parse(rd.result);if(!d.contract||!Array.isArray(d.readings))throw 0;if(confirm('Aktuelle Daten durch Sicherung ersetzen?')){state=d;persist();alert('Sicherung wurde eingespielt.')}}catch(e){alert('Die Datei konnte nicht gelesen werden.')}};rd.readAsText(f)};
+document.getElementById('clearData').onclick=()=>{if(confirm('Wirklich alle Daten löschen? Dieser Schritt kann nicht rückgängig gemacht werden.')){state={contract:{workPrice:'',basePrice:'',basePeriod:'month'},readings:[]};persist();showTab('home')}};
+render();
+</script>
+</body></html>
